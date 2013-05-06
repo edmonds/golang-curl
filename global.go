@@ -24,8 +24,8 @@ var globalFlags GlobalFlags = GLOBAL_DEFAULT
 
 /* Functions */
 
-func GlobalInit() *CurlError {
-    return NewError(C.curl_global_init(C.long(globalFlags)))
+func GlobalInit(flags GlobalFlags) *CurlError {
+    return NewError(C.curl_global_init(C.long(flags)))
 }
 
 func GlobalCleanup() {
@@ -33,7 +33,11 @@ func GlobalCleanup() {
 }
 
 func init() {
-    if err := GlobalInit(); err != nil {
+    if err := GlobalInit(globalFlags); err != nil {
         panic(fmt.Sprintf("unable to initialize libcurl: %s", err))
     }
+}
+
+func SetFlags(flags GlobalFlags) {
+    globalFlags = flags
 }
