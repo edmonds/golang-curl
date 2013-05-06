@@ -56,7 +56,7 @@ func main() {
             log.Fatalln(err)
         }
 
-        if err := easy.SetOptWrite(curl.IOWriterCallback, file); err != nil {
+        if err := easy.SetOptWrite(nil, file); err != nil {
             log.Fatalln(err)
         }
 
