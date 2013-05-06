@@ -1,20 +1,8 @@
 package curl
 
-/*
-#include <stdlib.h>
-#include <curl/curl.h>
-#include "cwrap.h"
-
-static CURLcode
-my_setoptc(CURL *handle, CURLoption option, char *param) {
-    return curl_easy_setopt(handle, option, param);
-}
-
-static CURLcode
-my_setoptl(CURL *handle, CURLoption option, long param) {
-    return curl_easy_setopt(handle, option, param);
-}
-*/
+//#include <stdlib.h>
+//#include <curl/curl.h>
+//#include "cwrap.h"
 import "C"
 
 import "errors"
@@ -52,7 +40,7 @@ func EasyInit() (easy *Easy, err *CurlError) {
         return nil, NewError(E_FAILED_INIT)
     }
     easy.cerrbuf = (*C.char)(C.malloc(C.CURL_ERROR_SIZE))
-    err = NewError(C.my_setoptc(easy.cptr, C.CURLOPT_ERRORBUFFER, easy.cerrbuf))
+    err = NewError(C.my_esetoptc(easy.cptr, C.CURLOPT_ERRORBUFFER, easy.cerrbuf))
     if err != nil {
         C.curl_easy_cleanup(easy.cptr)
         return nil, err
@@ -90,14 +78,14 @@ func (easy *Easy) Perform() error {
 func (easy *Easy) SetOpt(opt EasyOption, param interface{}) error {
     switch {
     case opt >= C.CURLOPTTYPE_OFF_T:
-        return easy.getError(C.my_setoptl(easy.cptr, C.CURLoption(opt), C.long(param.(int))))
+        return easy.getError(C.my_esetoptl(easy.cptr, C.CURLoption(opt), C.long(param.(int))))
     case opt >= C.CURLOPTTYPE_FUNCTIONPOINT:
         return errors.New("function options not supported by SetOpt()")
     case opt >= C.CURLOPTTYPE_OBJECTPOINT:
         if isStringOption(opt) {
             c_param := C.CString(param.(string))
             defer C.free(unsafe.Pointer(c_param))
-            return easy.getError(C.my_setoptc(easy.cptr, C.CURLoption(opt), c_param))
+            return easy.getError(C.my_esetoptc(easy.cptr, C.CURLoption(opt), c_param))
         } else {
             return fmt.Errorf("option %d not supported", opt)
         }
@@ -117,7 +105,7 @@ func (easy *Easy) SetOpt(opt EasyOption, param interface{}) error {
         default:
             panic("CURLOPTTYPE_LONG param must be of golang type bool, int, int32, or int64")
         }
-        return easy.getError(C.my_setoptl(easy.cptr, C.CURLoption(opt), val))
+        return easy.getError(C.my_esetoptl(easy.cptr, C.CURLoption(opt), val))
     }
     return nil
 }
