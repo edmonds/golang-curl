@@ -6,8 +6,6 @@ import "fmt"
 //#include <curl/curl.h>
 import "C"
 
-/* Constants */
-
 const (
     GLOBAL_ALL = C.CURL_GLOBAL_ALL
     GLOBAL_SSL = C.CURL_GLOBAL_SSL
@@ -16,15 +14,8 @@ const (
     GLOBAL_DEFAULT = C.CURL_GLOBAL_DEFAULT
     GLOBAL_ACK_EINTR = C.CURL_GLOBAL_ACK_EINTR
 )
-type GlobalFlags int
 
-/* Variables */
-
-var globalFlags GlobalFlags = GLOBAL_DEFAULT
-
-/* Functions */
-
-func GlobalInit(flags GlobalFlags) *CurlError {
+func GlobalInit(flags int) *CurlError {
     return NewError(C.curl_global_init(C.long(flags)))
 }
 
@@ -33,11 +24,7 @@ func GlobalCleanup() {
 }
 
 func init() {
-    if err := GlobalInit(globalFlags); err != nil {
-        panic(fmt.Sprintf("unable to initialize libcurl: %s", err))
+    if err := GlobalInit(GLOBAL_DEFAULT); err != nil {
+        panic(fmt.Sprintf("libcurl failed to initialize: %s", err))
     }
-}
-
-func SetFlags(flags GlobalFlags) {
-    globalFlags = flags
 }
