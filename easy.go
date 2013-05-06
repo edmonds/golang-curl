@@ -3,7 +3,6 @@ package curl
 /*
 #include <stdlib.h>
 
-#cgo pkg-config: libcurl
 #include <curl/curl.h>
 
 #include "cwrap.h"

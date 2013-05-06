@@ -1,6 +1,5 @@
 package curl
 
-//#cgo pkg-config: libcurl
 //#include <curl/curl.h>
 import "C"
 
