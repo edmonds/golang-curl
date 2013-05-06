@@ -2,15 +2,8 @@ package curl
 
 /*
 #include <stdlib.h>
-
 #include <curl/curl.h>
-
 #include "cwrap.h"
-
-static CURLcode
-my_setoptv(CURL *handle, CURLoption option, void *param) {
-    return curl_easy_setopt(handle, option, param);
-}
 
 static CURLcode
 my_setoptc(CURL *handle, CURLoption option, char *param) {
@@ -25,6 +18,7 @@ my_setoptl(CURL *handle, CURLoption option, long param) {
 import "C"
 
 import "errors"
+import "io"
 import "fmt"
 import "runtime"
 import "unsafe"
@@ -130,16 +124,29 @@ func (easy *Easy) SetOpt(opt EasyOption, param interface{}) error {
 
 func (easy *Easy) SetOptWrite(writeFunc WriteFunction, writeData interface{}) error {
     if writeFunc == nil && writeData == nil {
-        C.my_setoptv(easy.cptr, OPT_WRITEFUNCTION, nil)
-        C.my_setoptv(easy.cptr, OPT_WRITEDATA, nil)
+        // request to disable the write callback entirely
+        if err := easy.getError(C.my_set_write(nil, nil)); err != nil {
+            return err
+        }
         return nil
     }
-    if err := easy.getError(C.my_set_write(easy.cptr)); err != nil {
+
+    if writeFunc == nil && writeData != nil {
+        // this is analogous to libcurl's fwrite() default where WRITEDATA is
+        // treated as a writeable FILE * when WRITEFUNCTION is unspecified.
+        // translate this to mean a golang io.Writer for which we will provide
+        // an analogous default callback, and assert that the caller passed
+        // such an object.
+        writeFunc = IOWriterCallback
+        writeData = writeData.(io.Writer)
+    }
+
+    // install the cwrap trampoline
+    if err := easy.getError(C.my_set_write(easy.cptr, unsafe.Pointer(easy))); err != nil {
         return err
     }
-    if err := easy.getError(C.my_setoptv(easy.cptr, OPT_WRITEDATA, unsafe.Pointer(easy))); err != nil {
-        return err
-    }
+
+    // save the parameters to be used by the trampoline
     easy.writeFunc = writeFunc
     easy.writeData = writeData
     return nil
